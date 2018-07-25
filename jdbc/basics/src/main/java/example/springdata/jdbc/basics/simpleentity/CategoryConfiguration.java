@@ -47,13 +47,16 @@ public class CategoryConfiguration {
 	@Bean
 	public ApplicationListener<BeforeSaveEvent> timeStampingSaveTime() {
 
-		return event -> {
+		return new ApplicationListener<BeforeSaveEvent>() {
+			@Override
+			public void onApplicationEvent(BeforeSaveEvent event) {
 
-			Object entity = event.getEntity();
+				Object entity = event.getEntity();
 
-			if (entity instanceof Category) {
-				Category category = (Category) entity;
-				category.timeStamp();
+				if (entity instanceof Category) {
+					Category category = (Category) entity;
+					category.timeStamp();
+				}
 			}
 		};
 	}
