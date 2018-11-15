@@ -24,13 +24,19 @@
 		<module>geo-json</module>
 		<module>gridfs</module>
 		<module>java8</module>
+		<module>kotlin</module>
 		<module>query-by-example</module>
 		<module>reactive</module>
 		<module>security</module>
 		<module>text-search</module>
 		<module>transactions</module>
+		<module>schema-validation</module>
 		<module>util</module>
 	</modules>
+
+	<properties>
+		<embedded-mongo.version>2.1.1</embedded-mongo.version>
+	</properties>
 
 	<dependencies>
 

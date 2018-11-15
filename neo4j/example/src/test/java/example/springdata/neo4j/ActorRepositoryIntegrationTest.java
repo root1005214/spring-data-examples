@@ -16,22 +16,29 @@
 package example.springdata.neo4j;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.Assume.*;
+
+import java.util.Optional;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootVersion;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.data.util.Version;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ClassUtils;
 
 /**
  * Simple integration test demonstrating the use of the ActorRepository
  *
  * @author Luanne Misquitta
  * @author Oliver Gierke
+ * @author Michael J. Simons
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
 public class ActorRepositoryIntegrationTest {
@@ -41,10 +48,7 @@ public class ActorRepositoryIntegrationTest {
 
 	@Autowired ActorRepository actorRepository;
 
-	/**
-	 * @see #131
-	 */
-	@Test
+	@Test // #131
 	public void shouldBeAbleToSaveAndLoadActor() {
 
 		Movie goblet = new Movie("Harry Potter and the Goblet of Fire");
@@ -59,5 +63,49 @@ public class ActorRepositoryIntegrationTest {
 			assertThat(actor.getRoles()).hasSize(1).first()
 					.satisfies(role -> assertThat(role.getRole()).isEqualTo("Harry Potter"));
 		});
+	}
+
+	@Test // #386
+	public void shouldBeAbleToHandleNestedProperties() {
+
+		assumeTrue(thatSupportForNestedPropertiesIsAvailable());
+
+		Movie theParentTrap = new Movie("The Parent Trap");
+		Movie iKnowWhoKilledMe = new Movie("I Know Who Killed Me");
+
+		Actor lindsayLohan = new Actor("Lindsay Lohan");
+
+		lindsayLohan.actedIn(theParentTrap, "Hallie Parker");
+		lindsayLohan.actedIn(theParentTrap, "Annie James");
+		lindsayLohan.actedIn(iKnowWhoKilledMe, "Aubrey Fleming");
+		lindsayLohan.actedIn(iKnowWhoKilledMe, "Dakota Moss");
+		actorRepository.save(lindsayLohan);
+
+		Actor nealMcDonough = new Actor("Neal McDonough");
+		nealMcDonough.actedIn(iKnowWhoKilledMe, "Daniel Fleming");
+		actorRepository.save(nealMcDonough);
+
+		assertThat(actorRepository.findAllByRolesMovieTitle(iKnowWhoKilledMe.getTitle())).hasSize(2)
+				.extracting(Actor::getName).contains(lindsayLohan.getName(), nealMcDonough.getName());
+	}
+
+	private static boolean thatSupportForNestedPropertiesIsAvailable() {
+
+		Version minVersion = Version.parse("2.0.5");
+
+		return Optional.ofNullable(SpringBootVersion.getVersion()).map(Version::parse) //
+				.map(v -> v.isGreaterThanOrEqualTo(minVersion)) //
+				.orElseGet(ActorRepositoryIntegrationTest::fallBackToVersionSpecificClasses);
+	}
+
+	private static boolean fallBackToVersionSpecificClasses() {
+
+		ClassLoader usedClassLoader = ActorRepositoryIntegrationTest.class.getClassLoader();
+
+		String fqnBoot210Class = "org.springframework.boot.autoconfigure.insight.InsightsProperties";
+		String fqnBoot205Class = "org.springframework.boot.autoconfigure.security.servlet.RequestMatcherProvider";
+
+		return ClassUtils.isPresent(fqnBoot210Class, usedClassLoader) //
+				|| ClassUtils.isPresent(fqnBoot205Class, usedClassLoader);
 	}
 }

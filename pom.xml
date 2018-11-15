@@ -12,7 +12,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.0.3.RELEASE</version>
+		<version>2.0.5.RELEASE</version>
 	</parent>
 
 	<modules>
@@ -26,6 +26,7 @@
 		<module>mongodb</module>
 		<module>multi-store</module>
 		<module>neo4j</module>
+		<module>r2dbc</module>
 		<module>rest</module>
 		<module>redis</module>
 		<module>solr</module>
@@ -53,7 +54,7 @@
 		<profile>
 			<id>spring-data-next-releasetrain-released</id>
 			<properties>
-				<spring-data-releasetrain.version>Lovelace-M3</spring-data-releasetrain.version>
+				<spring-data-releasetrain.version>Lovelace-RC2</spring-data-releasetrain.version>
 			</properties>
 		</profile>
 
@@ -81,9 +82,12 @@
 
 			<properties>
 
+				<lombok.version>1.18.2</lombok.version>
+
 				<!-- Required for Java 11 -->
 				<hibernate.version>5.3.0.Final</hibernate.version>
 				<byte-buddy.version>1.8.11</byte-buddy.version>
+				<spring.version>5.0.9.BUILD-SNAPSHOT</spring.version>
 			</properties>
 
 			<dependencies>

@@ -19,25 +19,21 @@ import static java.util.Arrays.*;
 
 import java.sql.Clob;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.jdbc.core.convert.JdbcCustomConversions;
 import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories;
 import org.springframework.data.jdbc.repository.config.JdbcConfiguration;
-import org.springframework.data.relational.core.mapping.NamingStrategy;
-import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.core.mapping.event.BeforeSaveEvent;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Jens Schauder
+ * @author Mark Paluch
  */
 @Configuration
 @EnableJdbcRepositories
@@ -69,44 +65,8 @@ public class AggregateConfiguration extends JdbcConfiguration {
 		}
 	}
 
-	@Bean
-	public NamingStrategy namingStrategy() {
-
-		Map<String, String> columnAliases = new HashMap<String, String>();
-		columnAliases.put("lego_set.int_maximum_age", "max_age");
-		columnAliases.put("lego_set.int_minimum_age", "min_age");
-
-		Map<String, String> reverseColumnAliases = new HashMap<String, String>();
-		reverseColumnAliases.put("manual", "handbuch_id");
-
-		Map<String, String> keyColumnAliases = new HashMap<String, String>();
-		keyColumnAliases.put("models", "name");
-
-		return new NamingStrategy() {
-
-			@Override
-			public String getColumnName(RelationalPersistentProperty property) {
-
-				String defaultName = NamingStrategy.super.getColumnName(property);
-				String key = getTableName(property.getOwner().getType()) + "." + defaultName;
-				return columnAliases.computeIfAbsent(key, __ -> defaultName);
-			}
-
-			@Override
-			public String getReverseColumnName(RelationalPersistentProperty property) {
-				return reverseColumnAliases.computeIfAbsent(property.getName(),
-						__ -> NamingStrategy.super.getReverseColumnName(property));
-			}
-
-			@Override
-			public String getKeyColumn(RelationalPersistentProperty property) {
-				return keyColumnAliases.computeIfAbsent(property.getName(), __ -> NamingStrategy.super.getKeyColumn(property));
-			}
-		};
-	}
-
 	@Override
-	protected CustomConversions jdbcCustomConversions() {
+	protected JdbcCustomConversions jdbcCustomConversions() {
 
 		return new JdbcCustomConversions(asList(new Converter<Clob, String>() {
 

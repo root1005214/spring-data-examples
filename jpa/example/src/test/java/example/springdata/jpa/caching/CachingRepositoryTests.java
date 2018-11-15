@@ -32,17 +32,18 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Andrea Rizzini
  */
 @RunWith(SpringRunner.class)
 @Transactional
 @SpringBootTest
-public abstract class CachingRepositoryTests {
+public class CachingRepositoryTests {
 
 	@Autowired CachingUserRepository repository;
 	@Autowired CacheManager cacheManager;
 
 	@Test
-	public void cachesValuesReturnedForQueryMethod() {
+	public void checkCachedValue() {
 
 		User dave = new User();
 		dave.setUsername("dmatthews");
@@ -54,5 +55,17 @@ public abstract class CachingRepositoryTests {
 		// Verify entity cached
 		Cache cache = cacheManager.getCache("byUsername");
 		assertThat(cache.get("dmatthews").get()).isEqualTo(dave);
+	}
+
+	@Test
+	public void checkCacheEviction() {
+
+		User dave = new User();
+		dave.setUsername("dmatthews");
+		repository.save(dave);
+
+		// Verify entity evicted on cache
+		Cache cache = cacheManager.getCache("byUsername");
+		assertThat(cache.get("dmatthews")).isEqualTo(null);
 	}
 }
